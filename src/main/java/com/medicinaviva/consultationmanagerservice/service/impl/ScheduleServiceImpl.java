@@ -8,6 +8,10 @@ import com.medicinaviva.consultationmanagerservice.persistence.repository.Schedu
 import com.medicinaviva.consultationmanagerservice.service.contract.ScheduleService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.sql.Time;
@@ -21,6 +25,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final ScheduleRepository secureRepository;
 
     @Override
+    @CacheEvict(value = {"schedules", "doctor_schedules"}, allEntries = true)
     public Schedule create(Schedule schedule) throws ConflictException, BusinessException {
         schedule.setId(null);
         if (!this.isValidSchedule(schedule)) throw new ConflictException("This schedule is already added.");
@@ -29,6 +34,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
+    @Cacheable(value = "schedules", key = "#id")
     public Schedule read(Long id) throws NotFoundException {
         return this.secureRepository
                 .findByIdAndActive(id, true)
@@ -36,18 +42,22 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public List<Schedule> readByDoctorId(String id) {
+    @Cacheable(value = "doctor_schedules")
+    public List<Schedule> readByDoctorId(String doctorId) {
         return this.secureRepository
-                .findByDoctorIdAndActive(id, true);
+                .findByDoctorIdAndActive(doctorId, true);
     }
 
     @Override
+    @Cacheable(value = "schedules")
     public List<Schedule> readAll() {
         return this.secureRepository.findAll();
     }
 
 
     @Override
+    @CachePut(value = "schedules", key = "#schedule.id")
+    @CacheEvict(value = "doctor_schedules", allEntries = true)
     public Schedule update(Schedule schedule) throws NotFoundException, ConflictException, BusinessException {
         Schedule savedSchedule = this.read(schedule.getId());
         if (!this.isValidSchedule(schedule)) throw new ConflictException("This schedule is already added.");
@@ -65,6 +75,10 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "schedules", key = "#id"),
+            @CacheEvict(value = "doctor_schedules", allEntries = true)
+    })
     public void delete(Long id) throws NotFoundException {
         Schedule schedule = this.read(id);
         schedule.setActive(false);

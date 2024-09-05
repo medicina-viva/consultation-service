@@ -12,7 +12,7 @@ public interface ScheduleService {
 
     Schedule read(Long id) throws NotFoundException;
 
-    List<Schedule> readByDoctorId(String id) ;
+    List<Schedule> readByDoctorId(String doctorId); ;
 
     Schedule update(Schedule schedule) throws NotFoundException, ConflictException, BusinessException;
 

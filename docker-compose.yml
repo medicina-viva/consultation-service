@@ -1,6 +1,13 @@
-version: '3.9'
-
 services:
+  consultation-cache:
+    container_name: consultation-cache
+    image: redis:6.0
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - consultation-network
+
   consultation-database:
     container_name: consultation-database
     image: postgres:14-alpine
