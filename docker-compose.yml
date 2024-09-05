@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+  consultation-database:
+    container_name: consultation-database
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - consultation-dbdata:/data/db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    networks:
+      - consultation-network
+
+volumes:
+  consultation-dbdata:
+
+networks:
+  consultation-network:
+    driver: bridge
