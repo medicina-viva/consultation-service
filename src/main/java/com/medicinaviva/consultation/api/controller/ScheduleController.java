@@ -1,14 +1,14 @@
-package com.medicinaviva.consultationmanagerservice.api.controller;
+package com.medicinaviva.consultation.api.controller;
 
-import com.medicinaviva.consultationmanagerservice.api.dto.CreateScheduleRequest;
-import com.medicinaviva.consultationmanagerservice.api.dto.ReadScheduleResponse;
-import com.medicinaviva.consultationmanagerservice.api.dto.Response;
-import com.medicinaviva.consultationmanagerservice.api.dto.UpdateScheduleRequest;
-import com.medicinaviva.consultationmanagerservice.exception.BusinessException;
-import com.medicinaviva.consultationmanagerservice.exception.ConflictException;
-import com.medicinaviva.consultationmanagerservice.exception.NotFoundException;
-import com.medicinaviva.consultationmanagerservice.persistence.entity.Schedule;
-import com.medicinaviva.consultationmanagerservice.service.contract.ScheduleService;
+import com.medicinaviva.consultation.api.dto.CreateScheduleRequest;
+import com.medicinaviva.consultation.api.dto.ReadScheduleResponse;
+import com.medicinaviva.consultation.api.dto.Response;
+import com.medicinaviva.consultation.api.dto.UpdateScheduleRequest;
+import com.medicinaviva.consultation.model.exception.BusinessException;
+import com.medicinaviva.consultation.model.exception.ConflictException;
+import com.medicinaviva.consultation.model.exception.NotFoundException;
+import com.medicinaviva.consultation.persistence.entity.Schedule;
+import com.medicinaviva.consultation.service.contract.ScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -18,14 +18,14 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Tag(name = "Schedules")
-@Controller("/schedules")
+@RestController
+@RequestMapping("/schedules")
 @RequiredArgsConstructor
 public class ScheduleController {
     private final ScheduleService scheduleService;
@@ -52,10 +52,9 @@ public class ScheduleController {
             Schedule schedule = this.mapper.map(request, Schedule.class);
             this.scheduleService.create(schedule);
             response = Response.builder().code(HttpStatus.CREATED.value()).message("Schedule Created.").build();
-        }catch (BusinessException ex) {
-            response = Response.builder().code(HttpStatus. BAD_REQUEST.value()).message(ex.getMessage()).build();
-        }
-        catch (ConflictException ex) {
+        } catch (BusinessException ex) {
+            response = Response.builder().code(HttpStatus.BAD_REQUEST.value()).message(ex.getMessage()).build();
+        } catch (ConflictException ex) {
             response = Response.builder().code(HttpStatus.CONFLICT.value()).message(ex.getMessage()).build();
         } catch (Exception ex) {
             response = Response
@@ -95,7 +94,8 @@ public class ScheduleController {
                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("An unexpected Error occurred")
                     .body(ex.getMessage())
-                    .build();        }
+                    .build();
+        }
         return new ResponseEntity<>(response, HttpStatusCode.valueOf(response.getCode()));
     }
 
@@ -126,7 +126,7 @@ public class ScheduleController {
         return new ResponseEntity<>(response, HttpStatusCode.valueOf(response.getCode()));
     }
 
-    @GetMapping()
+    @GetMapping
     @Operation(summary = "Get Schedules")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Returns schedules."),
@@ -176,8 +176,8 @@ public class ScheduleController {
             this.scheduleService.update(schedule);
             response = Response.builder().code(HttpStatus.OK.value()).body("OK").build();
         } catch (BusinessException ex) {
-            response = Response.builder().code(HttpStatus. BAD_REQUEST.value()).message(ex.getMessage()).build();
-        }catch (NotFoundException ex) {
+            response = Response.builder().code(HttpStatus.BAD_REQUEST.value()).message(ex.getMessage()).build();
+        } catch (NotFoundException ex) {
             response = Response.builder().code(HttpStatus.NOT_FOUND.value()).message(ex.getMessage()).build();
         } catch (ConflictException ex) {
             response = Response.builder().code(HttpStatus.CONFLICT.value()).message(ex.getMessage()).build();
@@ -216,7 +216,8 @@ public class ScheduleController {
                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("An unexpected Error occurred")
                     .body(ex.getMessage())
-                    .build();        }
+                    .build();
+        }
         return new ResponseEntity<>(response, HttpStatusCode.valueOf(response.getCode()));
     }
 }

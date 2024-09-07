@@ -1,9 +1,9 @@
-package com.medicinaviva.consultationmanagerservice.service.contract;
+package com.medicinaviva.consultation.service.contract;
 
-import com.medicinaviva.consultationmanagerservice.exception.BusinessException;
-import com.medicinaviva.consultationmanagerservice.exception.ConflictException;
-import com.medicinaviva.consultationmanagerservice.exception.NotFoundException;
-import com.medicinaviva.consultationmanagerservice.persistence.entity.Schedule;
+import com.medicinaviva.consultation.model.exception.BusinessException;
+import com.medicinaviva.consultation.model.exception.ConflictException;
+import com.medicinaviva.consultation.model.exception.NotFoundException;
+import com.medicinaviva.consultation.persistence.entity.Schedule;
 
 import java.util.List;
 
@@ -12,7 +12,9 @@ public interface ScheduleService {
 
     Schedule read(Long id) throws NotFoundException;
 
-    List<Schedule> readByDoctorId(String doctorId); ;
+    List<Schedule> readByDoctorId(String doctorId);
+
+    ;
 
     Schedule update(Schedule schedule) throws NotFoundException, ConflictException, BusinessException;
 

@@ -1,4 +1,4 @@
-package com.medicinaviva.consultationmanagerservice.config;
+package com.medicinaviva.consultation.config;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

@@ -1,6 +1,6 @@
-package com.medicinaviva.consultationmanagerservice.api.validation.validators;
+package com.medicinaviva.consultation.api.validation.validators;
 
-import com.medicinaviva.consultationmanagerservice.api.validation.contract.BaseValidator;
+import com.medicinaviva.consultation.api.validation.contract.BaseValidator;
 
 public class RequiredFieldValidator extends BaseValidator {
     private final String returnMessage;

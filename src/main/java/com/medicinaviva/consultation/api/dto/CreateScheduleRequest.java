@@ -1,4 +1,4 @@
-package com.medicinaviva.consultationmanagerservice.api.dto;
+package com.medicinaviva.consultation.api.dto;
 
 import lombok.Data;
 

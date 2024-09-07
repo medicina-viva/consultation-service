@@ -1,115 +1,225 @@
 package com.medicinaviva.consultation.service.impl;
 
-import com.medicinaviva.consultation.model.exception.ConflictException;
+import com.medicinaviva.consultation.model.enums.ConsultationStatus;
+import com.medicinaviva.consultation.model.enums.KafkaTopics;
+import com.medicinaviva.consultation.model.event.ConsultationEvent;
 import com.medicinaviva.consultation.model.exception.BusinessException;
+import com.medicinaviva.consultation.model.exception.ConflictException;
 import com.medicinaviva.consultation.model.exception.NotFoundException;
+import com.medicinaviva.consultation.persistence.entity.Consultation;
+import com.medicinaviva.consultation.persistence.entity.ConsultationHistory;
 import com.medicinaviva.consultation.persistence.entity.Schedule;
+import com.medicinaviva.consultation.persistence.repository.ConsultationHistoryRepository;
+import com.medicinaviva.consultation.persistence.repository.ConsultationRepository;
 import com.medicinaviva.consultation.persistence.repository.ScheduleRepository;
-import com.medicinaviva.consultation.service.contract.ScheduleService;
+import com.medicinaviva.consultation.service.contract.ConsultationService;
+import com.medicinaviva.consultation.utils.FuncUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import java.sql.Time;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
 
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ScheduleServiceImpl implements ScheduleService {
-    private final ScheduleRepository secureRepository;
+public class ConsultationServiceImpl implements ConsultationService {
+    private final ConsultationRepository consultationRepository;
+    private final ScheduleRepository scheduleRepository;
+    private final ConsultationHistoryRepository consultationHistoryRepository;
+    private final KafkaTemplate<String, ConsultationEvent> kafkaTemplate;
 
     @Override
-    @CacheEvict(value = {"schedules", "doctor_schedules"}, allEntries = true)
-    public Schedule create(Schedule schedule) throws ConflictException, BusinessException {
-        schedule.setId(null);
-        if (!this.isValidSchedule(schedule)) throw new ConflictException("This schedule is already added.");
-        schedule.setActive(true);
-        return this.secureRepository.save(schedule);
+    @Caching(evict = {
+            @CacheEvict(value = "consultations", allEntries = true),
+            @CacheEvict(value = "schedules", allEntries = true),
+            @CacheEvict(value = "doctor_schedules", allEntries = true)
+    })
+    public Consultation create(Consultation consultation) throws BusinessException, ConflictException {
+        this.isValidConsultation(consultation);
+        consultation.setId(null);
+        consultation.setActive(true);
+        consultation.setConsultationStatus(ConsultationStatus.PENDING.getValue());
+        consultation = this.consultationRepository.save(consultation);
+        Schedule schedule = this.scheduleRepository.
+                findScheduleByStartTime(
+                        consultation.getDoctorId(),
+                        consultation.getConsultationDate(),
+                        consultation.getConsultationTime()).get();
+
+        schedule.setActive(false);
+        this.scheduleRepository.save(schedule);
+
+        ConsultationEvent event  = FuncUtils.consultationEventFactory(consultation);
+        kafkaTemplate.send(KafkaTopics.CONSULTATION_SCHEDULED.getValue(),event);
+        return consultation;
     }
 
     @Override
-    @Cacheable(value = "schedules", key = "#id")
-    public Schedule read(Long id) throws NotFoundException {
-        return this.secureRepository
+    @Cacheable(value = "consultations", key = "#id")
+    public Consultation read(Long id) throws NotFoundException {
+        return this.consultationRepository
                 .findByIdAndActive(id, true)
-                .orElseThrow(() -> new NotFoundException(String.format("Could not find schedule with code: %d.", id)));
+                .orElseThrow(() -> new NotFoundException(String.format("Could not find consultation with code: %d.", id)));
     }
 
     @Override
-    @Cacheable(value = "doctor_schedules")
-    public List<Schedule> readByDoctorId(String doctorId) {
-        return this.secureRepository
-                .findByDoctorIdAndActive(doctorId, true);
+    public List<Consultation> readByPatientId(String patientId) {
+        return this.consultationRepository.findByPatientIdAndActive(patientId,true);
     }
 
     @Override
-    @Cacheable(value = "schedules")
-    public List<Schedule> readAll() {
-        return this.secureRepository.findAll();
+    public List<Consultation> readByDoctorId(String patientId) {
+        return this.consultationRepository.findByDoctorIdAndActive(patientId,true);
     }
 
+    @Override
+    @CachePut(value = "consultations", key = "#id")
+    public void confirm(Long id) throws NotFoundException, BusinessException {
+        Consultation consultation = this.read(id);
+        if (!consultation.getConsultationStatus().equals(ConsultationStatus.PENDING.getValue()))
+            throw new BusinessException("Can only confirm pending consultations.");
+
+        consultation.setConsultationStatus(ConsultationStatus.CONFIRMED.getValue());
+        this.consultationRepository.save(consultation);
+
+        ConsultationHistory history = ConsultationHistory
+                .builder()
+                .id(null)
+                .consultationId(consultation.getDoctorId())
+                .userId(consultation.getPatientId())
+                .description("Confirm consultation.")
+                .consultationStatus(ConsultationStatus.CONFIRMED.getValue())
+                .build();
+                
+        this.consultationHistoryRepository.save(history);
+        ConsultationEvent event  = FuncUtils.consultationEventFactory(consultation);
+        kafkaTemplate.send(KafkaTopics.CONSULTATION_SCHEDULED.getValue(),event);
+    }
 
     @Override
-    @CachePut(value = "schedules", key = "#schedule.id")
-    @CacheEvict(value = "doctor_schedules", allEntries = true)
-    public Schedule update(Schedule schedule) throws NotFoundException, ConflictException, BusinessException {
-        Schedule savedSchedule = this.read(schedule.getId());
-        if (!this.isValidSchedule(schedule)) throw new ConflictException("This schedule is already added.");
+    @CachePut(value = "consultations", key = "#id")
+    public void cancel(Long id, String userId, String motive) throws NotFoundException, BusinessException {
+        Consultation consultation = this.read(id);
+        if (!consultation.getConsultationStatus().equals(ConsultationStatus.PENDING.getValue())
+                || !consultation.getConsultationStatus().equals(ConsultationStatus.CONFIRMED.getValue()))
+            throw new BusinessException("Can only cancel pending or confirmed consultations.");
 
-        savedSchedule.setAvailableDate(schedule.getAvailableDate() != null ?
-                schedule.getAvailableDate() : savedSchedule.getAvailableDate());
+        consultation.setConsultationStatus(ConsultationStatus.CANCELED.getValue());
+        this.consultationRepository.save(consultation);
 
-        savedSchedule.setStartTime(schedule.getStartTime() != null ?
-                schedule.getStartTime() : savedSchedule.getStartTime());
-
-        savedSchedule.setEndTime(schedule.getEndTime() != null ?
-                schedule.getEndTime() : savedSchedule.getEndTime());
-
-        return this.secureRepository.save(savedSchedule);
+        ConsultationHistory history = ConsultationHistory
+                .builder()
+                .id(null)
+                .consultationId(consultation.getDoctorId())
+                .userId(userId)
+                .description(motive)
+                .consultationStatus(ConsultationStatus.CONFIRMED.getValue())
+                .build();
+                
+        this.consultationHistoryRepository.save(history);
+        ConsultationEvent event  = FuncUtils.consultationEventFactory(consultation);
+        kafkaTemplate.send(KafkaTopics.CONSULTATION_SCHEDULED.getValue(),event);
     }
 
     @Override
     @Caching(evict = {
-            @CacheEvict(value = "schedules", key = "#id"),
-            @CacheEvict(value = "doctor_schedules", allEntries = true)
+            @CacheEvict(value = "doctor_schedules", allEntries = true),
+            @CacheEvict(value = "schedules", allEntries = true)
     })
-    public void delete(Long id) throws NotFoundException {
-        Schedule schedule = this.read(id);
-        schedule.setActive(false);
-        this.secureRepository.save(schedule);
+    @CachePut(value = "consultations", key = "#consultation.id")
+    public Consultation update(Consultation consultation) throws BusinessException, ConflictException, NotFoundException {
+        Consultation savedConsultation = this.read(consultation.getId());
+        if (savedConsultation.getConsultationStatus().equals(ConsultationStatus.FINISHED.getValue()))
+            throw new BusinessException("Cannot update this consultation because it has finished.");
+
+        if (savedConsultation.getConsultationStatus().equals(ConsultationStatus.CONFIRMED.getValue()))
+            throw new BusinessException("Cannot update this consultation because it has been confirmed.");
+
+        if (savedConsultation.getConsultationStatus().equals(ConsultationStatus.CANCELED.getValue()))
+            throw new BusinessException("Cannot update this consultation because it has been canceled.");
+
+        this.isValidConsultation(consultation);
+
+        savedConsultation.setConsultationDate(consultation.getConsultationDate() != null ?
+                consultation.getConsultationDate() : savedConsultation.getConsultationDate());
+
+        savedConsultation.setConsultationDate(consultation.getConsultationTime() != null ?
+                consultation.getConsultationTime() : savedConsultation.getConsultationTime());
+
+        savedConsultation
+                .setTeleConsultation(
+                        savedConsultation.isTeleConsultation() == consultation.isTeleConsultation() ?
+                                savedConsultation.isTeleConsultation() : consultation.isTeleConsultation());
+
+        if (savedConsultation.getConsultationDate() != consultation.getConsultationDate()
+                && savedConsultation.getConsultationTime() != consultation.getConsultationTime()
+                && consultation.getConsultationDate() != null && consultation.getConsultationTime() != null ) {
+            Schedule schedule = this.scheduleRepository.
+                    findScheduleByStartTime(
+                            savedConsultation.getDoctorId(),
+                            consultation.getConsultationDate(),
+                            consultation.getConsultationTime()).get();
+
+            schedule.setActive(false);
+            this.scheduleRepository.save(schedule);
+            savedConsultation.setConsultationStatus(ConsultationStatus.PENDING.getValue());
+        }
+
+        savedConsultation = this.consultationRepository.save(savedConsultation);
+
+        return savedConsultation;
     }
 
-    private boolean isValidSchedule(Schedule schedule) throws BusinessException {
-        if(schedule.getStartTime().equals(schedule.getEndTime())
-                || schedule.getStartTime().toLocalTime().isAfter(schedule.getEndTime().toLocalTime())
-        ) throw new BusinessException("The Start time must be after End time.");
+    @Override
+    @CacheEvict(value = "consultations", key = "#id")
+    public void delete(Long id) throws NotFoundException, BusinessException {
+        Consultation consultation = this.read(id);
+        if (consultation.getConsultationStatus().equals(ConsultationStatus.FINISHED.getValue()))
+            throw new BusinessException("Cannot remove this consultation because it has finished.");
 
-        Optional<Schedule> savedSchedule = this.secureRepository
-                .findScheduleByEndTimeBetween(schedule.getDoctorId(),
-                        schedule.getAvailableDate(),
-                        Time.valueOf(schedule.getStartTime().toLocalTime().minusMinutes(15)),
-                        schedule.getStartTime());
+        if (consultation.getConsultationStatus().equals(ConsultationStatus.CONFIRMED.getValue()))
+            throw new BusinessException("To remove this consultation you must cancel first.");
 
-        if (savedSchedule.isPresent()) throw new BusinessException("Schedule conflict. You have a schedule that start at: "
-                + savedSchedule.get().getStartTime() + " and end at: " + savedSchedule.get().getEndTime() +
-                ". You're trying to create a schedule that starts at: " + schedule.getStartTime()
-                + " and ends at: " + schedule.getEndTime() +
-                ", what cannot be possible, you must have alt least 15 min of break time.");
+        LocalDateTime consultationDate = FuncUtils.convertDateToLocalDateTime(consultation.getConsultationDate());
+        if (LocalDateTime.now().isBefore(consultationDate.plusHours(24)))
+            throw new BusinessException("Cannot remove this consultation because,it has 24 hours " +
+                    "to be Remanded after the consultation date.");
+        consultation.setActive(false);
+        this.consultationRepository.save(consultation);
+    }
 
-        savedSchedule = this.secureRepository
-                .findScheduleByStartTime(schedule.getDoctorId(), schedule.getAvailableDate(), schedule.getStartTime());
+    private void isValidConsultation(Consultation consultation) throws ConflictException, BusinessException {
+       if(consultation.getDoctorId() != null
+               &&  consultation.getConsultationDate() != null
+               && consultation.getConsultationTime() != null){
 
-        if(savedSchedule.isPresent()) return false;
+           Optional<Consultation> savedConsultation = this.consultationRepository
+                   .findByPatientConsultationId(
+                           consultation.getPatientId(),
+                           consultation.getConsultationDate(),
+                           consultation.getConsultationTime());
 
-        savedSchedule = this.secureRepository
-                .findScheduleByEndTime(schedule.getDoctorId(), schedule.getAvailableDate(), schedule.getEndTime());
+           if (savedConsultation.isPresent())
+               throw new ConflictException("You've scheduled consultation for this date and time.");
 
-        return savedSchedule.isEmpty();
+           Optional<Schedule> schedule = this.scheduleRepository.
+                   findScheduleByStartTime(
+                           consultation.getDoctorId(),
+                           consultation.getConsultationDate(),
+                           consultation.getConsultationTime());
+
+           if (schedule.isEmpty())
+               throw new BusinessException("Doctor does not have break for this date and time," +
+                       "please verify the doctor schedule and try again.");
+       }
     }
 }

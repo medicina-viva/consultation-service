@@ -6,9 +6,10 @@ import java.sql.Time;
 import java.util.Date;
 
 @Data
-public class CreateScheduleRequest {
+public class ScheduleConsultationRequest {
     private String doctorId;
-    private Date availableDate;
-    private Time startTime;
-    private Time endTime;
+    private String patientId;
+    private Date consultationDate;
+    private Time consultationTime;
+    private boolean isTeleConsultation;
 }

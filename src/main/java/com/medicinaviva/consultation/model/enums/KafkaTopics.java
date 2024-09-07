@@ -5,12 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum ConsultationStatus {
-    PENDING("PENDING"),
-    CONFIRMED("CONFIRMED"),
-    CANCELED("CANCELED"),
-    REMANDED("REMANDED"),
-    FINISHED("FINISHED");
-
+public enum KafkaTopics {
+    CONSULTATION_SCHEDULED("consultationScheduledTopic");
     private String value;
 }

@@ -1,4 +1,4 @@
-package com.medicinaviva.consultationmanagerservice.config;
+package com.medicinaviva.consultation.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;

@@ -1,11 +1,12 @@
-package com.medicinaviva.consultationmanagerservice.service.impl;
+package com.medicinaviva.consultation.service.impl;
 
-import com.medicinaviva.consultationmanagerservice.exception.ConflictException;
-import com.medicinaviva.consultationmanagerservice.exception.BusinessException;
-import com.medicinaviva.consultationmanagerservice.exception.NotFoundException;
-import com.medicinaviva.consultationmanagerservice.persistence.entity.Schedule;
-import com.medicinaviva.consultationmanagerservice.persistence.repository.ScheduleRepository;
-import com.medicinaviva.consultationmanagerservice.service.contract.ScheduleService;
+import com.medicinaviva.consultation.model.exception.BusinessException;
+import com.medicinaviva.consultation.model.exception.ConflictException;
+import com.medicinaviva.consultation.model.exception.NotFoundException;
+import com.medicinaviva.consultation.persistence.entity.Schedule;
+import com.medicinaviva.consultation.persistence.repository.ScheduleRepository;
+import com.medicinaviva.consultation.service.contract.ScheduleService;
+import com.medicinaviva.consultation.utils.FuncUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -14,7 +15,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
-import java.sql.Time;
 import java.util.List;
 import java.util.Optional;
 
@@ -86,26 +86,27 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     private boolean isValidSchedule(Schedule schedule) throws BusinessException {
-        if(schedule.getStartTime().equals(schedule.getEndTime())
-                || schedule.getStartTime().toLocalTime().isAfter(schedule.getEndTime().toLocalTime())
+        if (FuncUtils.isEqual(schedule.getStartTime(), schedule.getEndTime())
+                || FuncUtils.isAfter(schedule.getStartTime(), schedule.getEndTime())
         ) throw new BusinessException("The Start time must be after End time.");
 
         Optional<Schedule> savedSchedule = this.secureRepository
                 .findScheduleByEndTimeBetween(schedule.getDoctorId(),
                         schedule.getAvailableDate(),
-                        Time.valueOf(schedule.getStartTime().toLocalTime().minusMinutes(15)),
+                        FuncUtils.minusMinutes(schedule.getStartTime(), 15),
                         schedule.getStartTime());
 
-        if (savedSchedule.isPresent()) throw new BusinessException("Schedule conflict. You have a schedule that start at: "
-                + savedSchedule.get().getStartTime() + " and end at: " + savedSchedule.get().getEndTime() +
-                ". You're trying to create a schedule that starts at: " + schedule.getStartTime()
-                + " and ends at: " + schedule.getEndTime() +
-                ", what cannot be possible, you must have alt least 15 min of break time.");
+        if (savedSchedule.isPresent())
+            throw new BusinessException("Schedule conflict. You have a schedule that start at: "
+                    + savedSchedule.get().getStartTime() + " and end at: " + savedSchedule.get().getEndTime() +
+                    ". You're trying to create a schedule that starts at: " + schedule.getStartTime()
+                    + " and ends at: " + schedule.getEndTime() +
+                    ", what cannot be possible, you must have alt least 15 min of break time.");
 
         savedSchedule = this.secureRepository
                 .findScheduleByStartTime(schedule.getDoctorId(), schedule.getAvailableDate(), schedule.getStartTime());
 
-        if(savedSchedule.isPresent()) return false;
+        if (savedSchedule.isPresent()) return false;
 
         savedSchedule = this.secureRepository
                 .findScheduleByEndTime(schedule.getDoctorId(), schedule.getAvailableDate(), schedule.getEndTime());

@@ -1,4 +1,4 @@
-package com.medicinaviva.consultationmanagerservice;
+package com.medicinaviva.consultation;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

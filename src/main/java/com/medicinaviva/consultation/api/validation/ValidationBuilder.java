@@ -1,7 +1,7 @@
-package com.medicinaviva.consultationmanagerservice.api.validation;
+package com.medicinaviva.consultation.api.validation;
 
-import com.medicinaviva.consultationmanagerservice.api.validation.contract.Validator;
-import com.medicinaviva.consultationmanagerservice.api.validation.validators.RequiredFieldValidator;
+import com.medicinaviva.consultation.api.validation.contract.Validator;
+import com.medicinaviva.consultation.api.validation.validators.RequiredFieldValidator;
 
 import java.util.ArrayList;
 import java.util.List;

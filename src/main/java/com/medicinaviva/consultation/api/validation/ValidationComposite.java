@@ -1,6 +1,6 @@
-package com.medicinaviva.consultationmanagerservice.api.validation;
+package com.medicinaviva.consultation.api.validation;
 
-import com.medicinaviva.consultationmanagerservice.api.validation.contract.Validator;
+import com.medicinaviva.consultation.api.validation.contract.Validator;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.medicinaviva.consultationmanagerservice.persistence.entity;
+package com.medicinaviva.consultation.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -36,7 +36,7 @@ public class Schedule implements Serializable {
     private boolean active;
 
     @CreationTimestamp
-    @Column(name = "created_at",nullable = false,updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp

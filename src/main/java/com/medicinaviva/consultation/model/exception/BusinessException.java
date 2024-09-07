@@ -1,4 +1,4 @@
-package com.medicinaviva.consultation.exception;
+package com.medicinaviva.consultation.model.exception;
 
 public class BusinessException extends Exception {
     public BusinessException(String message) {

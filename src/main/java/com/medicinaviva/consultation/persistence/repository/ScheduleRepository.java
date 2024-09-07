@@ -1,6 +1,6 @@
-package com.medicinaviva.consultationmanagerservice.persistence.repository;
+package com.medicinaviva.consultation.persistence.repository;
 
-import com.medicinaviva.consultationmanagerservice.persistence.entity.Schedule;
+import com.medicinaviva.consultation.persistence.entity.Schedule;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,8 +26,8 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             "AND  sc.startTime=:startTime " +
             "AND sc.active = true")
     Optional<Schedule> findScheduleByStartTime(@Param("doctorId") String doctorId,
-                                    @Param("availableDate") Date availableDate,
-                                    @Param("startTime") Time startTime);
+                                               @Param("availableDate") Date availableDate,
+                                               @Param("startTime") Time startTime);
 
     @Query("SELECT sc " +
             "FROM Schedule sc " +
@@ -37,7 +37,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             "AND  sc.endTime=:endTime " +
             "AND sc.active = true")
     Optional<Schedule> findScheduleByEndTime(@Param("doctorId") String doctorId,
-                                               @Param("availableDate") Date availableDate,
+                                             @Param("availableDate") Date availableDate,
                                              @Param("endTime") Time endTime);
 
     @Query("SELECT sc " +
@@ -48,7 +48,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             "AND  sc.endTime BETWEEN :endTime AND :endTimePlusBreak   " +
             "AND sc.active = true")
     Optional<Schedule> findScheduleByEndTimeBetween(@Param("doctorId") String doctorId,
-                                               @Param("availableDate") Date availableDate,
-                                               @Param("endTime") Time endTime,
+                                                    @Param("availableDate") Date availableDate,
+                                                    @Param("endTime") Time endTime,
                                                     @Param("endTimePlusBreak") Time endTimePlusBreak);
 }
