@@ -1,4 +1,4 @@
-package com.medicinaviva.consultationmanagerservice.exception;
+package com.medicinaviva.consultation.exception;
 
 public class ConflictException extends Exception {
     public ConflictException(String message) {
