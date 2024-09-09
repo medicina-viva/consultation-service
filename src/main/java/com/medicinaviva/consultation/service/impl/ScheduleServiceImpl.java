@@ -1,5 +1,14 @@
 package com.medicinaviva.consultation.service.impl;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.stereotype.Service;
+
 import com.medicinaviva.consultation.model.exception.BusinessException;
 import com.medicinaviva.consultation.model.exception.ConflictException;
 import com.medicinaviva.consultation.model.exception.NotFoundException;
@@ -7,16 +16,9 @@ import com.medicinaviva.consultation.persistence.entity.Schedule;
 import com.medicinaviva.consultation.persistence.repository.ScheduleRepository;
 import com.medicinaviva.consultation.service.contract.ScheduleService;
 import com.medicinaviva.consultation.utils.FuncUtils;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -64,13 +66,10 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         savedSchedule.setAvailableDate(schedule.getAvailableDate() != null ?
                 schedule.getAvailableDate() : savedSchedule.getAvailableDate());
-
         savedSchedule.setStartTime(schedule.getStartTime() != null ?
                 schedule.getStartTime() : savedSchedule.getStartTime());
-
         savedSchedule.setEndTime(schedule.getEndTime() != null ?
                 schedule.getEndTime() : savedSchedule.getEndTime());
-
         return this.secureRepository.save(savedSchedule);
     }
 
