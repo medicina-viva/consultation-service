@@ -1,6 +1,5 @@
-package com.medicinaviva.consultation.api.controller;
+package com.medicinaviva.consultation.api.schedule;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -18,10 +17,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.medicinaviva.consultation.api.dto.CreateScheduleRequest;
-import com.medicinaviva.consultation.api.dto.ReadScheduleResponse;
-import com.medicinaviva.consultation.api.dto.Response;
-import com.medicinaviva.consultation.api.dto.UpdateScheduleRequest;
+import com.medicinaviva.consultation.api.common.dto.Response;
+import com.medicinaviva.consultation.api.consultation.dto.CreateScheduleRequest;
+import com.medicinaviva.consultation.api.schedule.dto.ReadScheduleResponse;
+import com.medicinaviva.consultation.api.schedule.dto.UpdateScheduleRequest;
 import com.medicinaviva.consultation.model.exception.BusinessException;
 import com.medicinaviva.consultation.model.exception.ConflictException;
 import com.medicinaviva.consultation.model.exception.NotFoundException;
@@ -54,7 +53,7 @@ public class ScheduleController {
     })
     public ResponseEntity<Response> create(@RequestBody CreateScheduleRequest request) {
         Response response;
-        String error = ScheduleControllerValidators.createValidator(request);
+        String error = Validators.createValidator(request);
         if (error != null) {
             response = Response.builder().code(HttpStatus.BAD_REQUEST.value()).message(error).build();
             return new ResponseEntity<>(response, HttpStatusCode.valueOf(response.getCode()));
@@ -78,7 +77,6 @@ public class ScheduleController {
         }
         return new ResponseEntity<>(response, HttpStatusCode.valueOf(response.getCode()));
     }
-
 
     @GetMapping("/{id}")
     @Operation(summary = "Get Schedule")
@@ -121,11 +119,11 @@ public class ScheduleController {
         Response response;
         try {
             List<Schedule> schedules = this.scheduleService.readByDoctorId(doctorId);
-            List<ReadScheduleResponse> readScheduleResponses = new ArrayList<>();
-            for (Schedule schedule : schedules) {
-                ReadScheduleResponse readScheduleResponse = this.mapper.map(schedule, ReadScheduleResponse.class);
-                readScheduleResponses.add(readScheduleResponse);
-            }
+            List<ReadScheduleResponse> readScheduleResponses = schedules
+                    .stream()
+                    .map(item -> this.mapper.map(item, ReadScheduleResponse.class))
+                    .toList();
+
             response = Response.builder().code(HttpStatus.OK.value()).body(readScheduleResponses).build();
         } catch (Exception ex) {
             response = Response
@@ -148,11 +146,11 @@ public class ScheduleController {
         Response response;
         try {
             List<Schedule> schedules = this.scheduleService.readAll();
-            List<ReadScheduleResponse> readScheduleResponses = new ArrayList<>();
-            for (Schedule schedule : schedules) {
-                ReadScheduleResponse readScheduleResponse = this.mapper.map(schedule, ReadScheduleResponse.class);
-                readScheduleResponses.add(readScheduleResponse);
-            }
+            List<ReadScheduleResponse> readScheduleResponses = schedules
+                    .stream()
+                    .map(item -> this.mapper.map(item, ReadScheduleResponse.class))
+                    .toList();
+                    
             response = Response.builder().code(HttpStatus.OK.value()).body(readScheduleResponses).build();
         } catch (Exception ex) {
             response = Response
@@ -176,7 +174,7 @@ public class ScheduleController {
     })
     public ResponseEntity<Response> update(@PathVariable("id") long id, @RequestBody UpdateScheduleRequest request) {
         Response response;
-        String error = ScheduleControllerValidators.updateValidator(request);
+        String error = Validators.updateValidator(request);
         if (error != null) {
             response = Response.builder().code(HttpStatus.BAD_REQUEST.value()).message(error).build();
             return new ResponseEntity<>(response, HttpStatusCode.valueOf(response.getCode()));

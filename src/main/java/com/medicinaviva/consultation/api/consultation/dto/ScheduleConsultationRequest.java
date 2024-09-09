@@ -1,4 +1,4 @@
-package com.medicinaviva.consultation.api.dto;
+package com.medicinaviva.consultation.api.consultation.dto;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import java.sql.Time;
 import java.util.Date;
 
 @Data
-public class ReadConsultationResponse {
+public class ScheduleConsultationRequest {
     private String doctorId;
     private String patientId;
     private Date consultationDate;

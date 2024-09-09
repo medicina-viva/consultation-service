@@ -1,21 +1,22 @@
 package com.medicinaviva.consultation.persistence.entity;
 
 import java.io.Serializable;
-import java.sql.Time;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,33 +25,31 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
+@Builder
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "t_consultations")
-public class Consultation implements Serializable {
+@Table(name = "t_specialties")
+public class Specialty implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String patientId;
+    private String name;
 
-    private String doctorId;
+    private String description;
 
-    private Date consultationDate;
-
-    private Time consultationTime;
-
-    @OneToMany(mappedBy = "consultation", cascade = CascadeType.ALL)
-    private List<ConsultationHistory> histories ;
-
-    private String consultationStatus;
-
-    private boolean isTeleConsultation;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "t_specialty_subspecialty",
+            joinColumns = @JoinColumn(name = "specialty_id"),
+            inverseJoinColumns = @JoinColumn(name = "subspecialty_id")
+    )
+    private Set<SubSpecialty> subspecialties = new HashSet<>();
 
     @Column(name = "is_active")
     private boolean active;

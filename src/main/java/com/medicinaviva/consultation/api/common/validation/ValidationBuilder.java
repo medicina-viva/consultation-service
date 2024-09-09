@@ -1,10 +1,10 @@
-package com.medicinaviva.consultation.api.validation;
-
-import com.medicinaviva.consultation.api.validation.contract.Validator;
-import com.medicinaviva.consultation.api.validation.validators.RequiredFieldValidator;
+package com.medicinaviva.consultation.api.common.validation;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.medicinaviva.consultation.api.common.validation.contract.Validator;
+import com.medicinaviva.consultation.api.common.validation.validators.RequiredFieldValidator;
 
 public class ValidationBuilder {
     private final List<Validator> validators = new ArrayList<>();

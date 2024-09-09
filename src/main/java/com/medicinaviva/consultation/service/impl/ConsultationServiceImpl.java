@@ -1,5 +1,16 @@
 package com.medicinaviva.consultation.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+
 import com.medicinaviva.consultation.model.enums.ConsultationStatus;
 import com.medicinaviva.consultation.model.enums.KafkaTopics;
 import com.medicinaviva.consultation.model.event.ConsultationEvent;
@@ -14,18 +25,9 @@ import com.medicinaviva.consultation.persistence.repository.ConsultationReposito
 import com.medicinaviva.consultation.persistence.repository.ScheduleRepository;
 import com.medicinaviva.consultation.service.contract.ConsultationService;
 import com.medicinaviva.consultation.utils.FuncUtils;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 
 @Service
@@ -94,7 +96,7 @@ public class ConsultationServiceImpl implements ConsultationService {
         ConsultationHistory history = ConsultationHistory
                 .builder()
                 .id(null)
-                .consultationId(consultation.getDoctorId())
+                .consultation(Consultation.builder().id(consultation.getId()).build())
                 .userId(consultation.getPatientId())
                 .description("Confirm consultation.")
                 .consultationStatus(ConsultationStatus.CONFIRMED.getValue())
@@ -119,7 +121,7 @@ public class ConsultationServiceImpl implements ConsultationService {
         ConsultationHistory history = ConsultationHistory
                 .builder()
                 .id(null)
-                .consultationId(consultation.getDoctorId())
+                .consultation(Consultation.builder().id(consultation.getId()).build())
                 .userId(userId)
                 .description(motive)
                 .consultationStatus(ConsultationStatus.CONFIRMED.getValue())
