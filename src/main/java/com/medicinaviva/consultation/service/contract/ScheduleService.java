@@ -1,11 +1,11 @@
 package com.medicinaviva.consultation.service.contract;
 
+import java.util.List;
+
 import com.medicinaviva.consultation.model.exception.BusinessException;
 import com.medicinaviva.consultation.model.exception.ConflictException;
 import com.medicinaviva.consultation.model.exception.NotFoundException;
 import com.medicinaviva.consultation.persistence.entity.Schedule;
-
-import java.util.List;
 
 public interface ScheduleService {
     Schedule create(Schedule schedule) throws ConflictException, BusinessException;
@@ -14,7 +14,6 @@ public interface ScheduleService {
 
     List<Schedule> readByDoctorId(String doctorId);
 
-    ;
 
     Schedule update(Schedule schedule) throws NotFoundException, ConflictException, BusinessException;
 

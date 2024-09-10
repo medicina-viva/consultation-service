@@ -2,14 +2,8 @@ package com.medicinaviva.consultation.api.consultation.dto;
 
 import lombok.Data;
 
-import java.sql.Time;
-import java.util.Date;
-
 @Data
 public class ScheduleConsultationRequest {
-    private String doctorId;
-    private String patientId;
-    private Date consultationDate;
-    private Time consultationTime;
+    private Long sheduleId;
     private boolean isTeleConsultation;
 }

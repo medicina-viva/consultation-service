@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS t_consultations
 (
     id                   SERIAL PRIMARY KEY NOT NULL,
     patient_id           VARCHAR(32)        NOT NULL,
-    doctor_id            VARCHAR(2)         NOT NULL,
+    doctor_id            VARCHAR(32)         NOT NULL,
+    schedule_id          INT                NOT NULL REFERENCES t_schedules(id),
     consultation_date    DATE               NULL,
     consultation_time    TIME               NULL,
     consultation_status  VARCHAR(15)        NOT NULL,

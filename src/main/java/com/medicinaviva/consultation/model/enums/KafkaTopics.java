@@ -6,6 +6,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum KafkaTopics {
-    CONSULTATION_SCHEDULED("consultationScheduledTopic");
+    CONSULTATION_SCHEDULED("consultationScheduledTopic"),
+    CONSULTATION_CONFIRMED("consultationConfirmedTopic"),
+    CONSULTATION_CANCELED("consultationCanceledTopic");
+
     private String value;
 }

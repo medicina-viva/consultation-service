@@ -13,7 +13,6 @@ import com.medicinaviva.consultation.api.schedule.dto.UpdateScheduleRequest;
 public class Validators {
     protected static String createValidator(CreateScheduleRequest request) {
         List<Validator> validators = new ArrayList<>();
-        validators.addAll(ValidationBuilder.of("Doctor", request.getDoctorId()).required().build());
         validators.addAll(ValidationBuilder.of("available date", request.getAvailableDate()).required().build());
         validators.addAll(ValidationBuilder.of("Start time", request.getStartTime()).required().build());
         validators.addAll(ValidationBuilder.of("End time", request.getEndTime()).required().build());

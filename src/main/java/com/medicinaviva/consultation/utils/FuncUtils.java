@@ -9,12 +9,18 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.collection.spi.PersistentSet;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 
+import com.medicinaviva.consultation.model.CustomJwtAuthToken;
 import com.medicinaviva.consultation.model.event.ConsultationEvent;
+import com.medicinaviva.consultation.model.exception.UnauthorizedException;
 import com.medicinaviva.consultation.persistence.entity.Consultation;
 import com.medicinaviva.consultation.persistence.entity.Specialty;
 import com.medicinaviva.consultation.persistence.entity.SubSpecialty;
 
+@Component
 public class FuncUtils {
     public static LocalDateTime convertDateToLocalDateTime(Date date) {
         return date.toInstant()
@@ -57,5 +63,14 @@ public class FuncUtils {
                     }
                     return item;
                 }).toList();
+    }
+
+    public static String getUserIdentifier() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof CustomJwtAuthToken) {
+            CustomJwtAuthToken jwtToken = (CustomJwtAuthToken) authentication;
+            return jwtToken.getUserIdentifier();
+        }
+        throw new UnauthorizedException("Token is invalid.");
     }
 }

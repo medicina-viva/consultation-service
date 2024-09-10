@@ -6,7 +6,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,7 +38,6 @@ public class SpecialtyController {
     private final ModelMapper mapper;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create Specialty")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponses(value = {
@@ -129,7 +127,7 @@ public class SpecialtyController {
         return new ResponseEntity<>(response, HttpStatusCode.valueOf(response.getCode()));
     }
 
-    @GetMapping("")
+    @GetMapping
     @Operation(summary = "List Specialties")
     @ResponseStatus(HttpStatus.OK)
     @ApiResponses(value = {

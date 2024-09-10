@@ -6,7 +6,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,7 +41,6 @@ public class ScheduleController {
     private final ModelMapper mapper;
 
     @PostMapping
-    @PreAuthorize("hasRole('DOCTOR')")
     @Operation(summary = "Create Schedule")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponses(value = {
@@ -52,6 +50,7 @@ public class ScheduleController {
             @ApiResponse(responseCode = "500", description = "An unexpected error occurred."),
     })
     public ResponseEntity<Response> create(@RequestBody CreateScheduleRequest request) {
+
         Response response;
         String error = Validators.createValidator(request);
         if (error != null) {
@@ -150,7 +149,7 @@ public class ScheduleController {
                     .stream()
                     .map(item -> this.mapper.map(item, ReadScheduleResponse.class))
                     .toList();
-                    
+
             response = Response.builder().code(HttpStatus.OK.value()).body(readScheduleResponses).build();
         } catch (Exception ex) {
             response = Response

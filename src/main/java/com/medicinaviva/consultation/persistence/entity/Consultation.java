@@ -41,6 +41,8 @@ public class Consultation implements Serializable {
 
     private String doctorId;
 
+    private Long scheduleId;
+    
     private Date consultationDate;
 
     private Time consultationTime;

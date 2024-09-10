@@ -1,13 +1,12 @@
 package com.medicinaviva.consultation.api.consultation.dto;
 
-import lombok.Data;
-
 import java.sql.Time;
 import java.util.Date;
 
+import lombok.Data;
+
 @Data
 public class CreateScheduleRequest {
-    private String doctorId;
     private Date availableDate;
     private Time startTime;
     private Time endTime;
