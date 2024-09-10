@@ -33,8 +33,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "Schedules")
 @RestController
+@Tag(name = "Schedules")
 @RequestMapping("/schedules")
 @RequiredArgsConstructor
 public class ScheduleController {
@@ -42,7 +42,7 @@ public class ScheduleController {
     private final ModelMapper mapper;
 
     @PostMapping
-    @PreAuthorize("hasRole('PATIENT')")
+    @PreAuthorize("hasRole('DOCTOR')")
     @Operation(summary = "Create Schedule")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponses(value = {

@@ -7,6 +7,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -35,8 +36,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "Consultations")
 @RestController
+@Tag(name = "Consultations")
 @RequestMapping("/consultations")
 @RequiredArgsConstructor
 public class ConsultationController {
@@ -44,6 +45,7 @@ public class ConsultationController {
     private final ModelMapper mapper;
 
     @PostMapping
+    @PreAuthorize("hasRole('PATIENT')")
     @Operation(summary = "Schedule consultation")
     @ResponseStatus(HttpStatus.CREATED)
     @ApiResponses(value = {
