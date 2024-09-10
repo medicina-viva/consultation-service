@@ -12,5 +12,7 @@ public interface SpecialtyService {
 
     boolean existsById(Long id);
 
+    boolean existAllById(List<Long> ids);
+
     List<Specialty> readAll();
 }

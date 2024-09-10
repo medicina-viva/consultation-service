@@ -42,6 +42,13 @@ public class SpecialtyServiceImpl implements SpecialtyService {
     }
 
     @Override
+    public boolean existAllById(List<Long> ids) {
+        return ids
+            .stream()
+            .allMatch( id -> this.existsById(id));
+    }
+
+    @Override
     @Cacheable(value = "specialties")
     public List<Specialty> readAll() {
         return this.specialtyRepository.findAll();

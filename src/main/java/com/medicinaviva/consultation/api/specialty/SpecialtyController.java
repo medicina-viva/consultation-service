@@ -102,6 +102,33 @@ public class SpecialtyController {
         return new ResponseEntity<>(response, HttpStatusCode.valueOf(response.getCode()));
     }
 
+    @GetMapping("/exists/all/{ids}")
+    @Operation(summary = "Exists Specialties by ids")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Returns successful message."),
+            @ApiResponse(responseCode = "500", description = "An unexpected error occurred."),
+    })
+    public ResponseEntity<Response> existAllById(@PathVariable("ids") List<Long> ids) {
+        Response response;
+        try {
+            boolean exists = this.service.existAllById(ids);
+            response = Response
+                    .builder()
+                    .code(HttpStatus.OK.value())
+                    .message("OK")
+                    .body(exists).build();
+        } catch (Exception ex) {
+            response = Response
+                    .builder()
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("An unexpected Error occurred")
+                    .body(ex.getMessage())
+                    .build();
+        }
+        return new ResponseEntity<>(response, HttpStatusCode.valueOf(response.getCode()));
+    }
+
     @GetMapping("")
     @Operation(summary = "List Specialties")
     @ResponseStatus(HttpStatus.OK)
