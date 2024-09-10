@@ -12,8 +12,10 @@ import com.medicinaviva.consultation.model.enums.KafkaTopics;
 import com.medicinaviva.consultation.model.event.ConsultationEvent;
 import com.medicinaviva.consultation.model.exception.BusinessException;
 import com.medicinaviva.consultation.model.exception.ConflictException;
+import com.medicinaviva.consultation.model.exception.NotFoundException;
 import com.medicinaviva.consultation.persistence.entity.Consultation;
 import com.medicinaviva.consultation.persistence.entity.Schedule;
+import com.medicinaviva.consultation.persistence.repository.ConsultationHistoryRepository;
 import com.medicinaviva.consultation.persistence.repository.ConsultationRepository;
 import com.medicinaviva.consultation.persistence.repository.ScheduleRepository;
 import com.medicinaviva.consultation.service.contract.ConsultationService;
@@ -26,9 +28,10 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 @RequiredArgsConstructor
 public class ConsultationServiceImpl implements ConsultationService {
-    private final ConsultationRepository consultationRepository;
     private final ScheduleRepository scheduleRepository;
+    private final ConsultationRepository consultationRepository;
     private final KafkaTemplate<String, ConsultationEvent> kafkaTemplate;
+    private final ConsultationHistoryRepository consultationHistoryRepository;
 
     @Override
     @Caching(evict = {
@@ -58,5 +61,24 @@ public class ConsultationServiceImpl implements ConsultationService {
         ConsultationEvent event = FuncUtils.consultationEventFactory(consultation);
         kafkaTemplate.send(KafkaTopics.CONSULTATION_SCHEDULED.getValue(), event);
         return consultation;
+    }
+
+    @Override
+    public void confirm(Long consulationId) throws BusinessException, NotFoundException, ConflictException {
+        Consultation consultation = this.consultationRepository
+                .findByIdAndActive(consulationId, true)
+                .orElseThrow(() -> new NotFoundException("Could not find the specific cosultation."));
+
+        if (!consultation.getConsultationStatus().equals(ConsultationStatus.PENDING.getValue()))
+            throw new BusinessException("Can only confirm pending consulations.");
+
+        if (consultation.getConsultationStatus().equals(ConsultationStatus.CONFIRMED.getValue()))
+            throw new ConflictException("Consulation already confirmed.");
+
+        consultation.setConsultationStatus(ConsultationStatus.CONFIRMED.getValue());
+        consultation = this.consultationRepository.save(consultation);
+        FuncUtils.addConsultationHistory(consultation, "Patient confirms consulation.", consultationHistoryRepository);
+        ConsultationEvent event = FuncUtils.consultationEventFactory(consultation);
+        kafkaTemplate.send(KafkaTopics.CONSULTATION_CONFIRMED.getValue(), event);
     }
 }

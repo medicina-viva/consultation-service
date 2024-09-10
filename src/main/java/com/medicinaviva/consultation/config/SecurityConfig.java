@@ -21,6 +21,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/schedules/**").hasRole("DOCTOR")
                         .requestMatchers(HttpMethod.POST, "/specialties/**").hasRole("SUPER")
                         .requestMatchers(HttpMethod.POST, "/consultations/**").hasRole("PATIENT")
+                        .requestMatchers(HttpMethod.PATCH, "/consultations/confirm/**").hasRole("PATIENT")
                         .requestMatchers("/actuator/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2

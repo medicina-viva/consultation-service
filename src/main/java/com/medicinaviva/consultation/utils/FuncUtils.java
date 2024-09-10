@@ -17,8 +17,10 @@ import com.medicinaviva.consultation.model.CustomJwtAuthToken;
 import com.medicinaviva.consultation.model.event.ConsultationEvent;
 import com.medicinaviva.consultation.model.exception.UnauthorizedException;
 import com.medicinaviva.consultation.persistence.entity.Consultation;
+import com.medicinaviva.consultation.persistence.entity.ConsultationHistory;
 import com.medicinaviva.consultation.persistence.entity.Specialty;
 import com.medicinaviva.consultation.persistence.entity.SubSpecialty;
+import com.medicinaviva.consultation.persistence.repository.ConsultationHistoryRepository;
 
 @Component
 public class FuncUtils {
@@ -72,5 +74,18 @@ public class FuncUtils {
             return jwtToken.getUserIdentifier();
         }
         throw new UnauthorizedException("Token is invalid.");
+    }
+
+    public static void addConsultationHistory(Consultation consultation, String desc,
+            ConsultationHistoryRepository repo) {
+        String userId = FuncUtils.getUserIdentifier();
+        ConsultationHistory consultationHistory = ConsultationHistory
+                .builder()
+                .userId(userId)
+                .description(desc)
+                .consultation(consultation)
+                .consultationStatus(consultation.getConsultationStatus())
+                .build();
+        repo.save(consultationHistory);
     }
 }
