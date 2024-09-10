@@ -1,8 +1,8 @@
-package com.medicinaviva.consultation.api.validation;
-
-import com.medicinaviva.consultation.api.validation.contract.Validator;
+package com.medicinaviva.consultation.api.common.validation;
 
 import java.util.List;
+
+import com.medicinaviva.consultation.api.common.validation.contract.Validator;
 
 public class ValidationComposite implements Validator {
     private final List<Validator> validators;

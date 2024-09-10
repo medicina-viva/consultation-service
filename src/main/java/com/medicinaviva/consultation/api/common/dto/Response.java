@@ -1,4 +1,4 @@
-package com.medicinaviva.consultation.api.dto;
+package com.medicinaviva.consultation.api.common.dto;
 
 import lombok.Builder;
 import lombok.Data;

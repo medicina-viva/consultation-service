@@ -1,9 +1,9 @@
-package com.medicinaviva.consultation.api.dto;
-
-import lombok.Data;
+package com.medicinaviva.consultation.api.schedule.dto;
 
 import java.sql.Time;
 import java.util.Date;
+
+import lombok.Data;
 
 @Data
 public class UpdateScheduleRequest {
